@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.inventory.mapper.ItemMapper">
+
+    <!-- 공통 컬럼 -->
+    <sql id="itemColumns">
+        I.ITEM_ID,
+        I.CATEGORY_ID,
+        C.CATEGORY_NAME,
+        I.LOCATION_ID,
+        L.LOCATION_NAME,
+        I.ITEM_NAME,
+        I.ITEM_CODE,
+        I.UNIT,
+        I.MIN_QTY,
+        I.STATUS,
+        TO_CHAR(I.CREATED_AT, 'YYYY-MM-DD') AS CREATED_AT
+    </sql>
+
+    <!-- 공통 JOIN -->
+    <sql id="itemJoin">
+        FROM ITEM I
+        LEFT JOIN CATEGORY C ON I.CATEGORY_ID = C.CATEGORY_ID
+        LEFT JOIN LOCATION L ON I.LOCATION_ID = L.LOCATION_ID
+    </sql>
+
+    <!-- 목록 조회 -->
+    <select id="selectItemList" parameterType="ItemDto" resultType="ItemDto">
+        SELECT
+        <include refid="itemColumns"/>
+        <include refid="itemJoin"/>
+        <where>
+            I.STATUS != 'INACTIVE'
+            <if test="searchName != null and searchName != ''">
+                AND I.ITEM_NAME LIKE '%' || #{searchName} || '%'
+            </if>
+            <if test="searchCategory != null and searchCategory != ''">
+                AND I.CATEGORY_ID = #{searchCategory}
+            </if>
+            <if test="searchStatus != null and searchStatus != ''">
+                AND I.STATUS = #{searchStatus}
+            </if>
+        </where>
+        ORDER BY I.ITEM_ID DESC
+    </select>
+
+    <!-- 단건 조회 -->
+    <select id="selectItemById" parameterType="Long" resultType="ItemDto">
+        SELECT
+        <include refid="itemColumns"/>
+        <include refid="itemJoin"/>
+        WHERE I.ITEM_ID = #{itemId}
+    </select>
+
+    <!-- 등록 -->
+    <insert id="insertItem" parameterType="ItemDto">
+        INSERT INTO ITEM (
+            ITEM_ID,
+            CATEGORY_ID,
+            LOCATION_ID,
+            ITEM_NAME,
+            ITEM_CODE,
+            UNIT,
+            MIN_QTY,
+            STATUS,
+            CREATED_AT
+        ) VALUES (
+                     SEQ_ITEM.NEXTVAL,
+                     #{categoryId},
+                     #{locationId},
+                     #{itemName},
+                     #{itemCode},
+                     #{unit},
+                     #{minQty},
+                     'ACTIVE',
+                     SYSDATE
+                 )
+    </insert>
+
+    <!-- 수정 -->
+    <update id="updateItem" parameterType="ItemDto">
+        UPDATE ITEM
+        <set>
+            <if test="itemName != null and itemName != ''">
+                ITEM_NAME = #{itemName},
+            </if>
+            <if test="categoryId != null">
+                CATEGORY_ID = #{categoryId},
+            </if>
+            <if test="locationId != null">
+                LOCATION_ID = #{locationId},
+            </if>
+            <if test="unit != null and unit != ''">
+                UNIT = #{unit},
+            </if>
+            <if test="minQty != null">
+                MIN_QTY = #{minQty},
+            </if>
+            <if test="status != null and status != ''">
+                STATUS = #{status},
+            </if>
+        </set>
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+    <!-- 삭제 (논리 삭제) -->
+    <update id="deleteItem" parameterType="Long">
+        UPDATE ITEM
+        SET STATUS = 'INACTIVE'
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.inventory.mapper.StockMapper">
+
+    <!-- 현재 재고 조회 (물품별) -->
+    <select id="selectStockByItemId" parameterType="Long" resultType="StockDto">
+        SELECT
+            S.STOCK_ID,
+            S.ITEM_ID,
+            I.ITEM_NAME,
+            I.ITEM_CODE,
+            I.MIN_QTY,
+            S.CURRENT_QTY,
+            CASE WHEN S.CURRENT_QTY &lt; I.MIN_QTY THEN 1 ELSE 0 END AS LOW_STOCK,
+            TO_CHAR(S.UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM STOCK S
+                 JOIN ITEM I ON S.ITEM_ID = I.ITEM_ID
+        WHERE S.ITEM_ID = #{itemId}
+    </select>
+
+    <!-- 전체 재고 현황 목록 -->
+    <select id="selectStockList" resultType="StockDto">
+        SELECT
+            S.STOCK_ID,
+            S.ITEM_ID,
+            I.ITEM_NAME,
+            I.ITEM_CODE,
+            I.MIN_QTY,
+            S.CURRENT_QTY,
+            CASE WHEN S.CURRENT_QTY &lt; I.MIN_QTY THEN 1 ELSE 0 END AS LOW_STOCK,
+            TO_CHAR(S.UPDATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS UPDATED_AT
+        FROM STOCK S
+                 JOIN ITEM I ON S.ITEM_ID = I.ITEM_ID
+        WHERE I.STATUS = 'ACTIVE'
+        ORDER BY LOW_STOCK DESC, I.ITEM_ID ASC
+    </select>
+
+    <!-- 재고 수량 증가 (입고) -->
+    <update id="increaseStock" parameterType="StockDto">
+        UPDATE STOCK
+        SET
+            CURRENT_QTY = CURRENT_QTY + #{qty},
+            UPDATED_AT  = SYSDATE
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+    <!-- 재고 수량 감소 (출고) -->
+    <update id="decreaseStock" parameterType="StockDto">
+        UPDATE STOCK
+        SET
+            CURRENT_QTY = CURRENT_QTY - #{qty},
+            UPDATED_AT  = SYSDATE
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+    <!-- 입출고 이력 등록 -->
+    <insert id="insertStockHistory" parameterType="StockDto">
+        INSERT INTO STOCK_HISTORY (
+            HISTORY_ID,
+            ITEM_ID,
+            HISTORY_TYPE,
+            QTY,
+            REASON,
+            CREATED_BY,
+            CREATED_AT
+        ) VALUES (
+                     SEQ_HISTORY.NEXTVAL,
+                     #{itemId},
+                     #{historyType},
+                     #{qty},
+                     #{reason},
+                     #{createdBy},
+                     SYSDATE
+                 )
+    </insert>
+
+    <!-- 입출고 이력 조회 (물품별) -->
+    <select id="selectHistoryByItemId" parameterType="Long" resultType="StockDto">
+        SELECT
+            H.HISTORY_ID,
+            H.ITEM_ID,
+            I.ITEM_NAME,
+            H.HISTORY_TYPE,
+            H.QTY,
+            H.REASON,
+            H.CREATED_BY,
+            TO_CHAR(H.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+        FROM STOCK_HISTORY H
+                 JOIN ITEM I ON H.ITEM_ID = I.ITEM_ID
+        WHERE H.ITEM_ID = #{itemId}
+        ORDER BY H.CREATED_AT DESC
+    </select>
+
+</mapper>

@@ -50,7 +50,7 @@ echo.
 echo [3/3] SpringBoot 앱 실행 중...
 echo       로그는 app.log 에서 확인하세요.
 echo.
-start "Inventory App" cmd /k "gradlew bootRun > app.log 2>&1"
+start "Inventory App" cmd /k "cd /d %~dp0.. && gradlew bootRun > app.log 2>&1"
 
 echo ==============================
 echo   시작 완료!

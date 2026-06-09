@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.inventory.mapper.DashboardMapper">
+
+    <!-- 전체 물품 수 -->
+    <select id="selectTotalItemCount" resultType="int">
+        SELECT COUNT(*)
+        FROM ITEM
+        WHERE STATUS = 'ACTIVE'
+    </select>
+
+    <!-- 총 재고 수량 -->
+    <select id="selectTotalStockQty" resultType="int">
+        SELECT NVL(SUM(S.CURRENT_QTY), 0)
+        FROM STOCK S
+                 JOIN ITEM I ON S.ITEM_ID = I.ITEM_ID
+        WHERE I.STATUS = 'ACTIVE'
+    </select>
+
+    <!-- 재고 부족 물품 수 -->
+    <select id="selectLowStockCount" resultType="int">
+        SELECT COUNT(*)
+        FROM STOCK S
+                 JOIN ITEM I ON S.ITEM_ID = I.ITEM_ID
+        WHERE I.STATUS = 'ACTIVE'
+          AND S.CURRENT_QTY &lt; I.MIN_QTY
+    </select>
+
+    <!-- 카테고리 수 -->
+    <select id="selectCategoryCount" resultType="int">
+        SELECT COUNT(*)
+        FROM CATEGORY
+    </select>
+
+    <!-- 카테고리별 재고 -->
+    <select id="selectCategoryStocks"
+            resultType="com.example.inventory.domain.DashboardDto$CategoryStockDto">
+        SELECT
+            C.CATEGORY_NAME,
+            COUNT(I.ITEM_ID)        AS ITEM_COUNT,
+            NVL(SUM(S.CURRENT_QTY), 0) AS TOTAL_QTY
+        FROM CATEGORY C
+                 LEFT JOIN ITEM  I ON C.CATEGORY_ID = I.CATEGORY_ID AND I.STATUS = 'ACTIVE'
+                 LEFT JOIN STOCK S ON I.ITEM_ID = S.ITEM_ID
+        GROUP BY C.CATEGORY_ID, C.CATEGORY_NAME
+        ORDER BY C.CATEGORY_ID ASC
+    </select>
+
+    <!-- 재고 부족 물품 목록 -->
+    <select id="selectLowStockItems" resultType="StockDto">
+        SELECT
+            S.ITEM_ID,
+            I.ITEM_NAME,
+            I.ITEM_CODE,
+            I.MIN_QTY,
+            S.CURRENT_QTY,
+            1 AS LOW_STOCK
+        FROM STOCK S
+                 JOIN ITEM I ON S.ITEM_ID = I.ITEM_ID
+        WHERE I.STATUS = 'ACTIVE'
+          AND S.CURRENT_QTY &lt; I.MIN_QTY
+        ORDER BY S.CURRENT_QTY ASC
+    </select>
+
+    <!-- 최근 입출고 이력 10건 -->
+    <select id="selectRecentHistories" resultType="StockDto">
+        SELECT *
+        FROM (
+                 SELECT
+                     H.HISTORY_ID,
+                     H.ITEM_ID,
+                     I.ITEM_NAME,
+                     I.ITEM_CODE,
+                     H.HISTORY_TYPE,
+                     H.QTY,
+                     H.REASON,
+                     H.CREATED_BY,
+                     TO_CHAR(H.CREATED_AT, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_AT
+                 FROM STOCK_HISTORY H
+                          JOIN ITEM I ON H.ITEM_ID = I.ITEM_ID
+                 ORDER BY H.CREATED_AT DESC
+             )
+        WHERE ROWNUM &lt;= 10
+    </select>
+
+</mapper>

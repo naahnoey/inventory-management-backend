@@ -39,3 +39,7 @@ out/
 
 ### Log ###
 *.log
+
+### Nexacro ###
+libs/
+*.jar

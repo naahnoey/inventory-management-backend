@@ -42,4 +42,4 @@ out/
 
 ### Nexacro ###
 libs/
-*.jar
+/src/main/resources/NexacroN_server_license.xml

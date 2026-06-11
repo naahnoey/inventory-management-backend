@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Dashboard" width="1280" height="720" titletext="New Form" onload="fn_getDashboard">
+    <Layouts>
+      <Layout height="720" mobileorientation="landscape" width="1280">
+        <Static id="stLabelTotalItem" taborder="0" text="전체 물품 수" left="46" top="158" width="123" height="41" onclick="Static00_onclick"/>
+        <Static id="stTotalItem" taborder="1" text="0개" left="190" top="150" width="120" height="60"/>
+        <Static id="stLabelTotalStock" taborder="2" text="총 재고 수량" left="320" top="150" width="120" height="60"/>
+        <Static id="stTotalStock" taborder="3" text="0개" left="450" top="150" width="120" height="60"/>
+        <Static id="stLabelLowStock" taborder="4" text="재고 부족" left="570" top="150" width="120" height="60"/>
+        <Static id="stLowStock" taborder="5" text="0개" left="700" top="150" width="120" height="60"/>
+        <Static id="stLabelCategory" taborder="6" text="카테고리 수" left="890" top="150" width="120" height="60"/>
+        <Static id="stCategory" taborder="7" text="0개" left="1090" top="150" width="120" height="60"/>
+        <Grid id="grdCategory" taborder="8" left="60" top="240" width="250" height="430" binddataset="dsCategoryStock">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+              </Columns>
+              <Rows>
+                <Row size="24" band="head"/>
+                <Row size="24"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="카테고리"/>
+                <Cell col="1" text="물품 수"/>
+                <Cell col="2" text="총 재고"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:categoryName"/>
+                <Cell col="1" text="bind:itemCount"/>
+                <Cell col="2" text="bind:totalQty"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Grid id="grdLowStock" taborder="9" left="360" top="240" width="860" height="192" binddataset="dsLowStock">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+              </Columns>
+              <Rows>
+                <Row size="24" band="head"/>
+                <Row size="24"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="물품명"/>
+                <Cell col="1" text="물품코드"/>
+                <Cell col="2" text="최소수량"/>
+                <Cell col="3" text="현재수량"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:itemName"/>
+                <Cell col="1" text="bind:itemCode"/>
+                <Cell col="2" text="bind:minQty"/>
+                <Cell col="3" text="bind:currentQty"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Grid id="grdHistory" taborder="10" left="360" top="460" width="870" height="215" binddataset="dsHistory">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+                <Column size="80"/>
+              </Columns>
+              <Rows>
+                <Row size="24" band="head"/>
+                <Row size="24"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="물품명"/>
+                <Cell col="1" text="구분"/>
+                <Cell col="2" text="수량"/>
+                <Cell col="3" text="사유"/>
+                <Cell col="4" text="처리자"/>
+                <Cell col="5" text="처리일시"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:itemName"/>
+                <Cell col="1" text="bind:historyType"/>
+                <Cell col="2" text="bind:qty"/>
+                <Cell col="3" text="bind:reason"/>
+                <Cell col="4" text="bind:createdBy"/>
+                <Cell col="5" text="bind:createdAt"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Button id="btnRefresh" taborder="11" text="새로고침" left="1075" top="63" width="111" height="70"/>
+      </Layout>
+    </Layouts>
+    <Script type="xscript5.1"><![CDATA[// 화면 로드 시 자동 실행
+this.Dashboard_onload = function(obj, e) {
+    this.fn_getDashboard();
+}
+
+// 새로고침 버튼 클릭
+this.btnRefresh_onclick = function(obj, e) {
+    this.fn_getDashboard();
+}
+
+// 대시보드 조회
+this.fn_getDashboard = function() {
+    this.transaction(
+        "getDashboard",                          // 트랜잭션 ID
+        "SVC::nexacro/getDashboard.do",          // 서비스 URL
+        "",                                      // 전송 Dataset (없음)
+        "dsSummary=dsSummary "
+        + "dsCategoryStock=dsCategoryStock "
+        + "dsLowStock=dsLowStock "
+        + "dsHistory=dsHistory",                 // 수신 Dataset
+        "",                                      // 파라미터
+        "fn_getDashboardCallBack"                // 콜백 함수
+    );
+}
+
+// 조회 완료 콜백
+this.fn_getDashboardCallBack = function(svcId, errorCode, errorMsg) {
+    if (errorCode < 0) {
+        alert("오류 발생: " + errorMsg);
+        return;
+    }
+
+    // 요약 카드 수치 업데이트
+    this.stTotalItem.set_text(this.dsSummary.getColumn(0, "totalItemCount") + " 개");
+    this.stTotalStock.set_text(this.dsSummary.getColumn(0, "totalStockQty") + " 개");
+    this.stLowStock.set_text(this.dsSummary.getColumn(0, "lowStockCount") + " 개");
+    this.stCategory.set_text(this.dsSummary.getColumn(0, "categoryCount") + " 개");
+
+    // Grid는 Dataset에 바인딩되어 있으면 자동으로 표시
+}]]></Script>
+    <Objects>
+      <Dataset id="dsSummary">
+        <ColumnInfo>
+          <Column id="totalItemCount" type="INT" size="256"/>
+          <Column id="totalStockQty" type="INT" size="256"/>
+          <Column id="lowStockCount" type="INT" size="256"/>
+          <Column id="categoryCount" type="INT" size="256"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="dsCategoryStock">
+        <ColumnInfo>
+          <Column id="categoryName" type="STRING" size="100"/>
+          <Column id="itemCount" type="INT" size="256"/>
+          <Column id="totalQty" type="INT" size="256"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="dsLowStock">
+        <ColumnInfo>
+          <Column id="itemName" type="STRING" size="200"/>
+          <Column id="itemCode" type="STRING" size="50"/>
+          <Column id="minQty" type="INT" size="256"/>
+          <Column id="currentQty" type="INT" size="256"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="dsHistory">
+        <ColumnInfo>
+          <Column id="itemName" type="STRING" size="200"/>
+          <Column id="historyType" type="STRING" size="3"/>
+          <Column id="qty" type="INT" size="256"/>
+          <Column id="reason" type="STRING" size="500"/>
+          <Column id="createdBy" type="STRING" size="100"/>
+          <Column id="createdAt" type="STRING" size="20"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+  </Form>
+</FDL>

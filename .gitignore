@@ -39,3 +39,7 @@ out/
 
 ### Log ###
 *.log
+
+### Nexacro ###
+libs/
+/src/main/resources/NexacroN_server_license.xml

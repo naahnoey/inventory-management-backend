@@ -29,6 +29,13 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
+    // Nexacro XAPI 라이브러리 (로컬 jar)
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Nexacro XAPI 의존성
+    implementation 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1'
+    implementation 'commons-lang:commons-lang:2.6'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

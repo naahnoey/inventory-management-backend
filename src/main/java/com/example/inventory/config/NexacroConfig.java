@@ -54,14 +54,6 @@ public class NexacroConfig extends WebConfig implements WebMvcRegistrations {
         super.addArgumentResolvers(resolvers);
     }
 
-    @Bean
-    public NexacroView nexacroView() {
-        NexacroView view = new NexacroView();
-        view.setDefaultContentType(PlatformType.CONTENT_TYPE_XML);
-        view.setDefaultCharset("UTF-8");
-        return view;
-    }
-
     /**
      * 응답 처리기
      * Java 객체 --> Dataset
@@ -71,10 +63,10 @@ public class NexacroConfig extends WebConfig implements WebMvcRegistrations {
         NexacroHandlerMethodReturnValueHandler returnValueHandler = new NexacroHandlerMethodReturnValueHandler();
 
         // 실제 응답 생성기
-//        NexacroView nexacroView = new NexacroView();
-//        nexacroView.setDefaultContentType(PlatformType.CONTENT_TYPE_XML);
-//        nexacroView.setDefaultCharset("UTF-8");
-        returnValueHandler.setView(nexacroView());
+        NexacroView nexacroView = new NexacroView();
+        nexacroView.setDefaultContentType(PlatformType.CONTENT_TYPE_XML);
+        nexacroView.setDefaultCharset("UTF-8");
+        returnValueHandler.setView(nexacroView);
 
         // 파일 다운로드 전용
         NexacroFileView nexacroFileView = new NexacroFileView();
@@ -92,13 +84,13 @@ public class NexacroConfig extends WebConfig implements WebMvcRegistrations {
     @Override
     public void configureHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
 
-//        NexacroView nexacroView = new NexacroView();
-//        nexacroView.setDefaultContentType(PlatformType.CONTENT_TYPE_XML);
-//        nexacroView.setDefaultCharset("UTF-8");
+        NexacroView nexacroView = new NexacroView();
+        nexacroView.setDefaultContentType(PlatformType.CONTENT_TYPE_XML);
+        nexacroView.setDefaultCharset("UTF-8");
 
         NexacroMappingExceptionResolver nexacroException = new NexacroMappingExceptionResolver();
 
-        nexacroException.setView(nexacroView());
+        nexacroException.setView(nexacroView);
         nexacroException.setShouldLogStackTrace(true);  // 서버 로그 출력
         nexacroException.setShouldSendStackTrace(true); // 클라이언트(Nexacro)에도 스택트레이스 전달
         nexacroException.setOrder(1);

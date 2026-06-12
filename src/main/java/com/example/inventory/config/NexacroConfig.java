@@ -56,7 +56,7 @@ public class NexacroConfig extends WebConfig implements WebMvcRegistrations {
 
     /**
      * 응답 처리기
-     * Java 객체 --> Dataset
+     * Controller 반환값(NexacroResult)을 Nexacro Dataset/XML 응답으로 변환
      */
     @Override
     public void addReturnValueHandlers(List<HandlerMethodReturnValueHandler> handlers) {
@@ -72,7 +72,7 @@ public class NexacroConfig extends WebConfig implements WebMvcRegistrations {
         NexacroFileView nexacroFileView = new NexacroFileView();
         returnValueHandler.setFileView(nexacroFileView);
 
-        handlers.add(returnValueHandler);
+        handlers.add(0, returnValueHandler);    // 핸들러 순서 명시
 
         super.addReturnValueHandlers(handlers);
     }
